@@ -29,11 +29,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * bl_config.h
+ * bl_dgemm_ref.c
  *
  *
  * Purpose:
- * this header file contains configuration parameters.
+ * implement reference mkl using GEMM (optional) in C.
  *
  * Todo:
  *
@@ -43,28 +43,64 @@
  * 
  * */
 
-#ifndef BLISLAB_CONFIG_H
-#define BLISLAB_CONFIG_H
 
-// Allow C++ users to include this header file in their source code. However,
-// we make the extern "C" conditional on whether we're using a C++ compiler,
-// since regular C compilers don't understand the extern "C" construct.
-#ifdef __cplusplus
-extern "C" {
+#include <omp.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <float.h>
+
+#include <bl_dgemm.h>
+#include <bl_dgemm_ref.h>
+
+#ifdef USE_BLAS
+/* 
+ * dgemm prototype
+ *
+ */ 
+//void dgemm(char*, char*, int*, int*, int*, double*, double*, 
+//        int*, double*, int*, double*, double*, int*);
+extern void dgemm_(char*, char*, int*, int*, int*, double*, double*, 
+        int*, double*, int*, double*, double*, int*);
 #endif
 
-#define GEMM_SIMD_ALIGN_SIZE 32
+void bl_dgemm_ref(
+        int    m,
+        int    n,
+        int    k,
+        double *XA,
+        int    lda,
+        double *XB,
+        int    ldb,
+        double *XC,
+        int    ldc
+        )
+{
+    // Local variables.
+    int    i, j, p;
+    double beg, time_collect, time_dgemm, time_square;
+    double alpha = 1.0, beta = 1.0;
 
-#define DGEMM_MC 96
-#define DGEMM_NC 2048
-#define DGEMM_KC 256
-#define DGEMM_MR 4
-#define DGEMM_NR 4
+    // Sanity check for early return.
+    if ( m == 0 || n == 0 || k == 0 ) return;
 
-// End extern "C" construct block.
-#ifdef __cplusplus
+    // Reference GEMM implementation.
+    beg = omp_get_wtime();
+
+#ifdef USE_BLAS
+    dgemm_( "N", "N", &m, &n, &k, &alpha,
+            XA, &lda, XB, &ldb, &beta, XC, &ldc );
+#else
+    #pragma omp parallel for private( i, p )
+    for ( j = 0; j < n; j ++ ) {
+        for ( i = 0; i < m; i ++ ) {
+            for ( p = 0; p < k; p ++ ) {
+                XC[ j * ldc + i ] += XA[ p * lda + i ] * XB[ j * ldb + p ];
+            }
+        }
+    }
+#endif
+
+    time_dgemm = omp_get_wtime() - beg;
+
 }
-#endif
-
-#endif
 

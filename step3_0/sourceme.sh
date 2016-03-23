@@ -11,7 +11,7 @@ export BLISLAB_USE_BLAS=true
 echo "BLISLAB_USE_BLAS = $BLISLAB_USE_BLAS"
 
 # Optimization Level (O0, O1, O2, O3)
-export COMPILER_OPT_LEVEL=O3
+export COMPILER_OPT_LEVEL=O2
 echo "COMPILER_OPT_LEVEL = $COMPILER_OPT_LEVEL"
 
 # Manually set the BLAS path if BLIS_USE_BLAS=true and using GNU compiler.

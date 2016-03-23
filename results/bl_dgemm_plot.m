@@ -1,9 +1,9 @@
-step1_result;
+%step1_result;
 %step2_result;
-%step3_result;
+step3_result;
 
 
-PEAK_PERF=28.32;
+PEAK_PERF=68.32;
 
 % ---------------------------------------------------------
 % Plotting
@@ -18,14 +18,14 @@ set( gcf, 'Position', [0 0 600 400]);
 
 hold;
 
-plot( run_step1_st( :, 1 ), run_step1_st( :,4), '.-', 'LineWidth', 2, 'Color',  [0 0.2 1.0] );
-plot( run_step1_st( :, 1 ), run_step1_st( :, 5), '.-', 'LineWidth', 2, 'Color', [1 0 0.2] );
+%plot( run_step1_st( :, 1 ), run_step1_st( :,4), '.-', 'LineWidth', 2, 'Color',  [0 0.2 1.0] );
+%plot( run_step1_st( :, 1 ), run_step1_st( :, 5), '.-', 'LineWidth', 2, 'Color', [1 0 0.2] );
 
 %plot( run_step2_st( :, 1 ), run_step2_st( :,4), '.-', 'LineWidth', 2, 'Color',  [0 0.2 1.0] );
 %plot( run_step2_st( :, 1 ), run_step2_st( :, 5), '.-', 'LineWidth', 2, 'Color', [1 0 0.2] );
 
-%plot( run_step3_st( :, 1 ), run_step3_st( :,4), '.-', 'LineWidth', 2, 'Color',  [0 0.2 1.0] );
-%plot( run_step3_st( :, 1 ), run_step3_st( :, 5), '.-', 'LineWidth', 2, 'Color', [1 0 0.2] );
+plot( run_step3_st( :, 1 ), run_step3_st( :,4), '.-', 'LineWidth', 2, 'Color',  [0 0.2 1.0] );
+plot( run_step3_st( :, 1 ), run_step3_st( :, 5), '.-', 'LineWidth', 2, 'Color', [1 0 0.2] );
 
 xlabel( 'm=k=n' );
 ylabel( 'GFLOPS' );

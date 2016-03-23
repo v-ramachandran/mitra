@@ -29,11 +29,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * bl_config.h
+ * bl_dgemm_ref.h
  *
  *
  * Purpose:
- * this header file contains configuration parameters.
+ * this header file contains reference functions prototypes.
  *
  * Todo:
  *
@@ -43,8 +43,8 @@
  * 
  * */
 
-#ifndef BLISLAB_CONFIG_H
-#define BLISLAB_CONFIG_H
+#ifndef BLISLAB_DGEMM_REF_H
+#define BLISLAB_DGEMM_REF_H
 
 // Allow C++ users to include this header file in their source code. However,
 // we make the extern "C" conditional on whether we're using a C++ compiler,
@@ -53,13 +53,17 @@
 extern "C" {
 #endif
 
-#define GEMM_SIMD_ALIGN_SIZE 32
-
-#define DGEMM_MC 96
-#define DGEMM_NC 2048
-#define DGEMM_KC 256
-#define DGEMM_MR 4
-#define DGEMM_NR 4
+void bl_dgemm_ref(
+    int    m,
+    int    n,
+    int    k,
+    double *XA,
+    int    lda,
+    double *XB,
+    int    ldb,
+    double *XC,
+    int    ldc
+    );
 
 // End extern "C" construct block.
 #ifdef __cplusplus

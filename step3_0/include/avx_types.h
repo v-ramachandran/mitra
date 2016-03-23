@@ -29,11 +29,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * bl_config.h
+ * avx_types.h
  *
  *
  * Purpose:
- * this header file contains configuration parameters.
+ * this header file contains a union definition for AVX intrinsics (easy for debugging purpose).
  *
  * Todo:
  *
@@ -53,13 +53,17 @@
 extern "C" {
 #endif
 
-#define GEMM_SIMD_ALIGN_SIZE 32
+typedef union {
+    __m256d v;
+    __m256i u;
+    double d[ 4 ];
+} v4df_t;
 
-#define DGEMM_MC 96
-#define DGEMM_NC 2048
-#define DGEMM_KC 256
-#define DGEMM_MR 4
-#define DGEMM_NR 4
+
+typedef union {
+    __m128i v;
+    int d[ 4 ];
+} v4li_t;
 
 // End extern "C" construct block.
 #ifdef __cplusplus

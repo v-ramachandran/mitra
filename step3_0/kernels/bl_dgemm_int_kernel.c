@@ -45,7 +45,6 @@
 #define acol(j) a[ (j)*DGEMM_MR ]
 //micro-panel b is stored in row major, ldb=DGEMM_NR.
 #define b(i,j) b[ (i)*DGEMM_NR + (j) ]
-#define brow(i) b[ (i)*DGEMM_NR ]
 //result      c is stored in column major.
 #define c(i,j) c[ (j)*ldc + (i) ]
 #define ccol(j) c[ (j)*ldc ]
@@ -132,78 +131,25 @@ void bl_dgemm_int_kernel(
 {
   dim_t i;
   
-  double* c0 = &ccol(0);
-  double* c1 = &ccol(1);
-  double* c2 = &ccol(2);
-  double* c3 = &ccol(3);
-  double* ai=&acol(0);
-  double* bi=&brow(0);
+  for ( i = 0; i < k; ++i ) {                 
+    double* ai = &acol(i);
+    double* ci;
+    // First column
+    ci = &ccol(0);
+    bl_daxpy(&b(i,0), ai, ci, 8);
 
-  //  for ( i = k-1; i >= 0; --i ) {
-  for ( i = k; i > 0; i-=8 ) {
+    // Second column
+    ci = &ccol(1);
+    bl_daxpy(&b(i,1), ai, ci, 8);
     
-    // 0
-    bl_daxpy(bi, ai, c0, DGEMM_MR);
-    bl_daxpy((bi+1), ai, c1, DGEMM_MR);
-    bl_daxpy((bi+2), ai, c2, DGEMM_MR);
-    bl_daxpy((bi+3), ai, c3, DGEMM_MR);
-    ai+=DGEMM_MR;
-    bi+=DGEMM_NR;
-
-    // 1
-    bl_daxpy(bi, ai, c0, DGEMM_MR);
-    bl_daxpy((bi+1), ai, c1, DGEMM_MR);
-    bl_daxpy((bi+2), ai, c2, DGEMM_MR);
-    bl_daxpy((bi+3), ai, c3, DGEMM_MR);
-    ai+=DGEMM_MR;
-    bi+=DGEMM_NR;
-
-    // 2
-    bl_daxpy(bi, ai, c0, DGEMM_MR);
-    bl_daxpy((bi+1), ai, c1, DGEMM_MR);
-    bl_daxpy((bi+2), ai, c2, DGEMM_MR);
-    bl_daxpy((bi+3), ai, c3, DGEMM_MR);
-    ai+=DGEMM_MR;
-    bi+=DGEMM_NR;
-
-    // 3
-    bl_daxpy(bi, ai, c0, DGEMM_MR);
-    bl_daxpy((bi+1), ai, c1, DGEMM_MR);
-    bl_daxpy((bi+2), ai, c2, DGEMM_MR);
-    bl_daxpy((bi+3), ai, c3, DGEMM_MR);
-    ai+=DGEMM_MR;
-    bi+=DGEMM_NR;
-
-    // 4
-    bl_daxpy(bi, ai, c0, DGEMM_MR);
-    bl_daxpy((bi+1), ai, c1, DGEMM_MR);
-    bl_daxpy((bi+2), ai, c2, DGEMM_MR);
-    bl_daxpy((bi+3), ai, c3, DGEMM_MR);
-    ai+=DGEMM_MR;
-    bi+=DGEMM_NR;
-
-    // 5
-    bl_daxpy(bi, ai, c0, DGEMM_MR);
-    bl_daxpy((bi+1), ai, c1, DGEMM_MR);
-    bl_daxpy((bi+2), ai, c2, DGEMM_MR);
-    bl_daxpy((bi+3), ai, c3, DGEMM_MR);
-    ai+=DGEMM_MR;
-    bi+=DGEMM_NR;
-
-    // 6
-    bl_daxpy(bi, ai, c0, DGEMM_MR);
-    bl_daxpy((bi+1), ai, c1, DGEMM_MR);
-    bl_daxpy((bi+2), ai, c2, DGEMM_MR);
-    bl_daxpy((bi+3), ai, c3, DGEMM_MR);
-    ai+=DGEMM_MR;
-    bi+=DGEMM_NR;
-
-    // 7
-    bl_daxpy(bi, ai, c0, DGEMM_MR);
-    bl_daxpy((bi+1), ai, c1, DGEMM_MR);
-    bl_daxpy((bi+2), ai, c2, DGEMM_MR);
-    bl_daxpy((bi+3), ai, c3, DGEMM_MR);
-    ai+=DGEMM_MR;
-    bi+=DGEMM_NR;
+    // Third column
+    ci = &ccol(2);
+    bl_daxpy(&b(i,2), ai, ci, 8);
+    
+    // Fourth column
+    ci = &ccol(3);
+    bl_daxpy(&b(i,3), ai, ci, 8);
   }
 }
+
+
