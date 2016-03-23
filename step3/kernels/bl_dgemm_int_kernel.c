@@ -40,6 +40,87 @@
 
 #define inc_t unsigned long long 
 
+//micro-panel a is stored in column major, lda=DGEMM_MR.
+#define a(i,j) a[ (j)*DGEMM_MR + (i) ]
+#define acol(j) a[ (j)*DGEMM_MR ]
+//micro-panel b is stored in row major, ldb=DGEMM_NR.
+#define b(i,j) b[ (i)*DGEMM_NR + (j) ]
+#define brow(i) b[ (i)*DGEMM_NR ]
+//result      c is stored in column major.
+#define c(i,j) c[ (j)*ldc + (i) ]
+#define ccol(j) c[ (j)*ldc ]
+
+void bl_daxpy_asm_4x1(
+        double *alpha,
+        double *x,
+        double *y
+        )
+{
+    __asm__ volatile
+    (
+	"                                            \n\t"
+	"movq                %1, %%rax               \n\t" // load address of x.              ( v )
+	"movq                %2, %%rbx               \n\t" // load address of y.              ( v )
+	"movq                %0, %%rcx               \n\t" // load address of alpha.          ( s )
+	"                                            \n\t"
+    "vxorpd    %%ymm0,  %%ymm0,  %%ymm0          \n\t" // set ymm0 to 0                   ( v )
+    "vxorpd    %%ymm1,  %%ymm1,  %%ymm1          \n\t" // set ymm1 to 0                   ( v )
+    "vxorpd    %%ymm2,  %%ymm2,  %%ymm2          \n\t" // set ymm2 to 0                   ( v )
+	"                                            \n\t"
+    "vmovapd   0 * 32(%%rax), %%ymm0             \n\t" // load x
+    "vmovapd   0 * 32(%%rbx), %%ymm1             \n\t" // load y
+	"                                            \n\t"
+	"vbroadcastsd       0 *  8(%%rcx), %%ymm2    \n\t" // load alpha, broacast to ymm2
+	"vfmadd231pd       %%ymm2, %%ymm0, %%ymm1    \n\t" // y := alpha * x + y (fma)
+	"vmovaps           %%ymm1, 0 * 32(%%rbx)     \n\t" // store back y
+	"                                            \n\t"
+	".DDONE:                                     \n\t"
+	"                                            \n\t"
+	: // output operands (none)
+	: // input operands
+	  "m" (alpha),        // 0
+	  "m" (x),            // 1
+	  "m" (y)             // 2
+	: // register clobber list
+	  "rax", "rbx", "rcx", "rdx", "rsi", "rdi",
+	  "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15",
+	  "xmm0", "xmm1", "xmm2", "xmm3",
+	  "xmm4", "xmm5", "xmm6", "xmm7",
+	  "xmm8", "xmm9", "xmm10", "xmm11",
+	  "xmm12", "xmm13", "xmm14", "xmm15",
+	  "memory"
+	);
+}
+
+void bl_daxpy(
+        double *alpha,
+        double *x,
+        double *y,
+        int n
+        )
+{
+    int i;
+    for ( i = 0; i < n; i += 4 ) {
+        bl_daxpy_asm_4x1( alpha, x, y );
+        //bl_daxpy_int_4x1( alpha, x, y );
+        x += 4;
+        y += 4;
+    }
+}
+
+void bl_daxpy_ref(
+        double *alpha,
+        double *x,
+        double *y,
+        int n
+        )
+{
+    int i;
+    for ( i = 0; i < n; i ++ ) {
+        y[ i ] = *alpha * x[ i ] + y[ i ];
+    }
+}
+
 void bl_dgemm_int_kernel(
                         int      k,
                         double*  a,
@@ -49,7 +130,39 @@ void bl_dgemm_int_kernel(
                         aux_t*         data
                       )
 {
+  dim_t i;
+  
+  double* c0 = &ccol(0);
+  double* c1 = &ccol(1);
+  double* c2 = &ccol(2);
+  double* c3 = &ccol(3);
+  double* ai=&acol(0);
+  double* bi=&brow(0);
 
+  //  for ( i = k-1; i >= 0; --i ) {
+  for ( i = 0; i < k; i+=4 ) {
+    bl_daxpy(&b(i,0), ai, c0, DGEMM_MR);
+    bl_daxpy(&b(i,1), ai, c1, DGEMM_MR);
+    bl_daxpy(&b(i,2), ai, c2, DGEMM_MR);
+    bl_daxpy(&b(i,3), ai, c3, DGEMM_MR);
+    ai+=DGEMM_MR;
+
+    bl_daxpy(&b(i+1,0), ai, c0, DGEMM_MR);
+    bl_daxpy(&b(i+1,1), ai, c1, DGEMM_MR);
+    bl_daxpy(&b(i+1,2), ai, c2, DGEMM_MR);
+    bl_daxpy(&b(i+1,3), ai, c3, DGEMM_MR);
+    ai+=DGEMM_MR;
+
+    bl_daxpy(&b(i+2,0), ai, c0, DGEMM_MR);
+    bl_daxpy(&b(i+2,1), ai, c1, DGEMM_MR);
+    bl_daxpy(&b(i+2,2), ai, c2, DGEMM_MR);
+    bl_daxpy(&b(i+2,3), ai, c3, DGEMM_MR);
+    ai+=DGEMM_MR;
+
+    bl_daxpy(&b(i+3,0), ai, c0, DGEMM_MR);
+    bl_daxpy(&b(i+3,1), ai, c1, DGEMM_MR);
+    bl_daxpy(&b(i+3,2), ai, c2, DGEMM_MR);
+    bl_daxpy(&b(i+3,3), ai, c3, DGEMM_MR);
+    ai+=DGEMM_MR;
+  }
 }
-
-
